@@ -13,12 +13,16 @@ useGLTF.preload('/models/logo.glb')
 const MAX_TILT = 0.1 // radians, subtle — the object itself
 const ENV_MAX_TILT = 0.6 // radians — HDRI swings further and opposite, to exaggerate highlight sweep
 const DAMPING = 4 // higher = snappier easing
+const FLIP_DAMPING = 2.2 // slower/weightier — this is a deliberate click gesture, not a hover twitch
 
-function Logo({ hovered }) {
+function Logo({ hovered, flipTarget }) {
   const { scene, cameras } = useGLTF('/models/logo.glb')
   const sourceCam = cameras[0]
   const groupRef = useRef()
   const materialsRef = useRef([])
+  const hoverX = useRef(0)
+  const hoverY = useRef(0)
+  const flipAngle = useRef(0)
   const [baseColorMap, normalMap] = useTexture([
     '/textures/basecolor-2k.jpg',
     '/textures/normal-2k.png',
@@ -50,8 +54,12 @@ function Logo({ hovered }) {
     if (!group) return
     const targetX = hovered.current ? state.pointer.y * MAX_TILT : 0
     const targetY = hovered.current ? state.pointer.x * MAX_TILT : 0
-    group.rotation.x = THREE.MathUtils.damp(group.rotation.x, targetX, DAMPING, delta)
-    group.rotation.y = THREE.MathUtils.damp(group.rotation.y, targetY, DAMPING, delta)
+    hoverX.current = THREE.MathUtils.damp(hoverX.current, targetX, DAMPING, delta)
+    hoverY.current = THREE.MathUtils.damp(hoverY.current, targetY, DAMPING, delta)
+    flipAngle.current = THREE.MathUtils.damp(flipAngle.current, flipTarget.current, FLIP_DAMPING, delta)
+
+    group.rotation.x = hoverX.current + flipAngle.current
+    group.rotation.y = hoverY.current
 
     const envTargetX = hovered.current ? -state.pointer.y * ENV_MAX_TILT : 0
     const envTargetY = hovered.current ? -state.pointer.x * ENV_MAX_TILT : 0
@@ -82,6 +90,7 @@ function Logo({ hovered }) {
 
 function App() {
   const hovered = useRef(false)
+  const flipTarget = useRef(0)
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -92,10 +101,13 @@ function App() {
         onPointerLeave={() => {
           hovered.current = false
         }}
+        onClick={() => {
+          flipTarget.current += Math.PI
+        }}
       >
         <color attach="background" args={['#e4e4e4']} />
         <Suspense fallback={null}>
-          <Logo hovered={hovered} />
+          <Logo hovered={hovered} flipTarget={flipTarget} />
         </Suspense>
       </Canvas>
       {/* lifts crushed blacks toward a soft navy floor, without touching highlights */}

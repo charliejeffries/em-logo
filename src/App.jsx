@@ -35,7 +35,7 @@ function Logo({ hovered }) {
           map: baseColorMap,
           normalMap,
           metalness: 1,
-          roughness: 0.2,
+          roughness: 0.3,
         })
       }
     })
@@ -86,6 +86,18 @@ function App() {
           <Logo hovered={hovered} />
         </Suspense>
       </Canvas>
+      {/* lifts crushed blacks toward a soft navy floor, without touching highlights */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: '#151b26',
+          mixBlendMode: 'lighten',
+          opacity: 0.55,
+          pointerEvents: 'none',
+        }}
+      />
+      {/* recolors the lifted result toward a cool blue grade */}
       <div
         style={{
           position: 'absolute',

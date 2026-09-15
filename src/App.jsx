@@ -35,7 +35,7 @@ function Logo({ hovered }) {
           map: baseColorMap,
           normalMap,
           metalness: 1,
-          roughness: 0.4,
+          roughness: 0.2,
         })
       }
     })
@@ -72,19 +72,31 @@ function App() {
   const hovered = useRef(false)
 
   return (
-    <Canvas
-      onPointerEnter={() => {
-        hovered.current = true
-      }}
-      onPointerLeave={() => {
-        hovered.current = false
-      }}
-    >
-      <color attach="background" args={['#e4e4e4']} />
-      <Suspense fallback={null}>
-        <Logo hovered={hovered} />
-      </Suspense>
-    </Canvas>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Canvas
+        onPointerEnter={() => {
+          hovered.current = true
+        }}
+        onPointerLeave={() => {
+          hovered.current = false
+        }}
+      >
+        <color attach="background" args={['#e4e4e4']} />
+        <Suspense fallback={null}>
+          <Logo hovered={hovered} />
+        </Suspense>
+      </Canvas>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: '#4a6fa0',
+          mixBlendMode: 'color',
+          opacity: 0.35,
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
   )
 }
 

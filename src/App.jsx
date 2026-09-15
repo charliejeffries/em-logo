@@ -10,13 +10,15 @@ import * as THREE from 'three'
 
 useGLTF.preload('/models/logo.glb')
 
-const MAX_TILT = 0.1 // radians, subtle
+const MAX_TILT = 0.1 // radians, subtle — the object itself
+const ENV_MAX_TILT = 0.6 // radians — HDRI swings further and opposite, to exaggerate highlight sweep
 const DAMPING = 4 // higher = snappier easing
 
 function Logo({ hovered }) {
   const { scene, cameras } = useGLTF('/models/logo.glb')
   const sourceCam = cameras[0]
   const groupRef = useRef()
+  const materialsRef = useRef([])
   const [baseColorMap, normalMap] = useTexture([
     '/textures/basecolor-2k.jpg',
     '/textures/normal-2k.png',
@@ -29,6 +31,7 @@ function Logo({ hovered }) {
     })
     baseColorMap.colorSpace = THREE.SRGBColorSpace
 
+    materialsRef.current = []
     scene.traverse((child) => {
       if (child.isMesh) {
         child.material = new THREE.MeshStandardMaterial({
@@ -37,6 +40,7 @@ function Logo({ hovered }) {
           metalness: 1,
           roughness: 0.3,
         })
+        materialsRef.current.push(child.material)
       }
     })
   }, [scene, baseColorMap, normalMap])
@@ -48,6 +52,14 @@ function Logo({ hovered }) {
     const targetY = hovered.current ? state.pointer.x * MAX_TILT : 0
     group.rotation.x = THREE.MathUtils.damp(group.rotation.x, targetX, DAMPING, delta)
     group.rotation.y = THREE.MathUtils.damp(group.rotation.y, targetY, DAMPING, delta)
+
+    const envTargetX = hovered.current ? -state.pointer.y * ENV_MAX_TILT : 0
+    const envTargetY = hovered.current ? -state.pointer.x * ENV_MAX_TILT : 0
+    materialsRef.current.forEach((material) => {
+      const rot = material.envMapRotation
+      rot.x = THREE.MathUtils.damp(rot.x, envTargetX, DAMPING, delta)
+      rot.y = THREE.MathUtils.damp(rot.y, envTargetY, DAMPING, delta)
+    })
   })
 
   return (
